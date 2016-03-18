@@ -3,7 +3,8 @@
 #ifndef SRC_KERNEL_H_
 #define SRC_KERNEL_H_
 
-#include "src/types.h"
+#include <stddef.h>
+#include <stdint.h>
 
 namespace basilisk {
 

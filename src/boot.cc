@@ -1,9 +1,11 @@
 // Copyright 2016 Connor Taffe
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "src/kernel.h"
 #include "src/multiboot.h"
 #include "src/result.h"
-#include "src/types.h"
 
 extern "C" {
 [[noreturn]] void _start();

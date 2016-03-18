@@ -3,7 +3,7 @@
 #ifndef SRC_MULTIBOOT_H_
 #define SRC_MULTIBOOT_H_
 
-#include "src/types.h"
+#include <stdint.h>
 
 namespace basilisk {
 

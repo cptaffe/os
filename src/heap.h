@@ -3,8 +3,10 @@
 #ifndef SRC_HEAP_H_
 #define SRC_HEAP_H_
 
+#include <stddef.h>
+#include <stdint.h>
+
 #include "src/result.h"
-#include "src/types.h"
 
 namespace basilisk {
 
