@@ -13,6 +13,7 @@ class Kernel {
   static Kernel *getInstance();
   [[noreturn]] void onBoot();
   [[noreturn]] void halt();
+  void debug(const char *msg);
 
  private:
   static Kernel *instance;

@@ -16,7 +16,8 @@ void *operator new(size_t size) {
       return opt.getValue();
     }
   }
-  return nullptr;
+
+  basilisk::Kernel::getInstance()->halt();
 }
 
 void operator delete(void *mem) noexcept {
@@ -29,6 +30,7 @@ namespace basilisk {
 
 namespace {
 Kernel kernel;
+VGAScreen screen;
 }
 
 Kernel *Kernel::instance{&kernel};
@@ -36,7 +38,6 @@ Kernel *Kernel::instance{&kernel};
 Kernel *Kernel::getInstance() { return instance; }
 
 void Kernel::onBoot() {
-  VGAScreen screen;
   screen.write(VGAScreen::Block{'K', VGAScreen::kRed, VGAScreen::kBlack});
 
   // allocate stack space for heap
@@ -54,6 +55,12 @@ void Kernel::halt() {
 
   for (;;) {
     // loop forever
+  }
+}
+
+void Kernel::debug(const char *msg) {
+  for (auto i = 0; msg[i]; i++) {
+    screen.write(VGAScreen::Block{msg[i], VGAScreen::kRed, VGAScreen::kBlack});
   }
 }
 
