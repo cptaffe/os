@@ -12,12 +12,14 @@ extern "C" {
 [[noreturn]] void kstart();
 }
 
+namespace {
 // boot images
 [[gnu::section(".multiboot")]] basilisk::Multiboot header{
     basilisk::Multiboot::kPageAlign | basilisk::Multiboot::kMemInfo |
     basilisk::Multiboot::kVideoInfo};
 
 [[gnu::section(".bootstrap_stack")]] uint8_t stack[16384];
+}  // namespace
 
 [[gnu::naked]] void _start() {
   asm("movl %0, %%esp\n"
