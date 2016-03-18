@@ -22,6 +22,8 @@ namespace {
 
 [[gnu::unused]][[gnu::section(".bootstrap_stack")]] uint8_t stack[16384];
 
+// Pretty nice code that g++ is a bitch about
+// because the naked attribute is unsupported on x86.
 // [[gnu::naked]] void _start() {
 //   asm("movl %0, %%esp\n"
 //       "call kstart\n" ::"g"(reinterpret_cast<intptr_t>(stack) +
@@ -33,7 +35,4 @@ asm(".globl _start\n"
     "movl $stack+16384, %esp\n"
     "call kstart\n");
 
-void kstart() {
-  *reinterpret_cast<uint16_t*>(static_cast<intptr_t>(0xb8000)) = 'A' | 4 << 8;
-  basilisk::Kernel::getInstance()->onBoot();
-}
+void kstart() { basilisk::Kernel::getInstance()->onBoot(); }

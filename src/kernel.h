@@ -6,16 +6,30 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "src/vga.h"
+
 namespace basilisk {
+
+class Stream {
+ public:
+  explicit constexpr Stream(VGAScreen *screen);
+  friend Stream &operator<<(Stream &, const char *);
+
+ private:
+  VGAScreen *screen;
+};
+
+constexpr Stream::Stream(VGAScreen *sc) : screen{sc} {}
 
 class Kernel {
  public:
   static Kernel *getInstance();
   [[noreturn]] void onBoot();
   [[noreturn]] void halt();
-  void debug(const char *msg);
+  Stream &getDebugStream();
 
  private:
+  static Stream *debug_stream;
   static Kernel *instance;
 };
 

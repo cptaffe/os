@@ -3,7 +3,6 @@
 #include "src/kernel.h"
 
 #include "src/heap.h"
-#include "src/vga.h"
 
 namespace {
 basilisk::Heap *heap{nullptr};
@@ -29,16 +28,18 @@ void operator delete(void *mem) noexcept {
 namespace basilisk {
 
 namespace {
-Kernel kernel;
 VGAScreen screen;
+Stream stream{&screen};
+Kernel kernel;
 }
 
 Kernel *Kernel::instance{&kernel};
+Stream *Kernel::debug_stream{&stream};
 
 Kernel *Kernel::getInstance() { return instance; }
 
 void Kernel::onBoot() {
-  screen.write(VGAScreen::Block{'K', VGAScreen::kRed, VGAScreen::kBlack});
+  getDebugStream() << "hey!";
 
   // allocate stack space for heap
   uint8_t heap_buffer[1024];
@@ -58,10 +59,13 @@ void Kernel::halt() {
   }
 }
 
-void Kernel::debug(const char *msg) {
+Stream &Kernel::getDebugStream() { return *debug_stream; }
+
+Stream &operator<<(Stream &s, const char *msg) {
   for (auto i = 0; msg[i]; i++) {
     screen.write(VGAScreen::Block{msg[i], VGAScreen::kRed, VGAScreen::kBlack});
   }
+  return s;
 }
 
 }  // namespace basilisk
