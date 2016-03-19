@@ -39,7 +39,9 @@ Stream *Kernel::debug_stream{&stream};
 Kernel *Kernel::getInstance() { return instance; }
 
 void Kernel::onBoot() {
-  getDebugStream() << "hey!";
+  getDebugStream() << "hey! ";
+  getDebugStream().setBackgroundColor(VGAScreen::kBlue);
+  getDebugStream() << "WELCOME";
 
   // allocate stack space for heap
   uint8_t heap_buffer[1024];
@@ -63,7 +65,7 @@ Stream &Kernel::getDebugStream() { return *debug_stream; }
 
 Stream &operator<<(Stream &s, const char *msg) {
   for (auto i = 0; msg[i]; i++) {
-    screen.write(VGAScreen::Block{msg[i], VGAScreen::kRed, VGAScreen::kBlack});
+    s.screen->write(VGAScreen::Block{msg[i], s.foreground, s.background});
   }
   return s;
 }

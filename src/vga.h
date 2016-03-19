@@ -10,7 +10,7 @@ namespace basilisk {
 
 class VGAScreen {
  public:
-  enum : uint8_t {
+  enum Color : uint8_t {
     kBlack,
     kBlue,
     kGreen,
