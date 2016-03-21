@@ -1,38 +1,15 @@
 // Copyright 2016 Connor Taffe
 
-#include "src/kernel.h"
+#include "src/libk/kernel.h"
 
-#include "src/heap.h"
+#include "src/libk/cxx.h"
+#include "src/libk/mem/heap.h"
 
 namespace {
-basilisk::Heap *heap{nullptr};
 const char *version =
     "Basilisk Kernel version 0.1.\nCopyright (c) 2016 Connor Taffe. All "
     "rights reserved.\n";
 }
-
-void *operator new(size_t size) {
-  if (heap != nullptr) {
-    auto opt = heap->allocate<void>(size);
-    if (opt.isOk()) {
-      return opt.getValue();
-    }
-  }
-
-  basilisk::Kernel::getInstance()->halt();
-}
-
-void *operator new[](size_t size) { return operator new(size); }
-
-void operator delete(void *mem) noexcept {
-  if (heap != nullptr) {
-    heap->deallocate(mem);
-  }
-}
-
-void operator delete(void *mem, size_t) noexcept { operator delete(mem); }
-
-void operator delete[](void *mem) noexcept { return operator delete(mem); }
 
 namespace basilisk {
 
@@ -51,8 +28,9 @@ void Kernel::onBoot() {
   getDebugStream().clear();
   getDebugStream() << version;
 
-  // allocate stack space for heap
-  uint8_t heap_buffer[1024];
+  // allocate stack space for heap, page aligned
+  static const size_t kPageSize = 4096;
+  alignas(kPageSize) uint8_t heap_buffer[kPageSize];
   auto hp = Heap{heap_buffer, sizeof(heap_buffer)};
   heap = &hp;
 

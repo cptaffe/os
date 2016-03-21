@@ -1,0 +1,19 @@
+cflags = -ffreestanding -fno-exceptions -fno-rtti -Wall -Wextra --std=c++1z -I.
+ldflags = -nostdlib -fpic -L${HOME}/opt/cross/lib -T src/link.ld
+
+rule link
+  command = i686-elf-g++ $ldflags $in -o $out
+
+rule cc
+  deps = gcc
+  depfile = $out.d
+  command = i686-elf-g++ -MMD -MF $out.d $cflags -c $in -o $out
+
+build k.bin: link src/libk/boot/boot.o src/libk/mem/heap.o src/libk/kernel.o src/libk/ds/result.o src/libk/drivers/video/vga/vga.o src/libk/cxx.o
+
+build src/libk/boot/boot.o: cc src/libk/boot/boot.cc
+build src/libk/mem/heap.o: cc src/libk/mem/heap.cc
+build src/libk/kernel.o: cc src/libk/kernel.cc
+build src/libk/ds/result.o: cc src/libk/ds/result.cc
+build src/libk/drivers/video/vga/vga.o: cc src/libk/drivers/video/vga/vga.cc
+build src/libk/cxx.o: cc src/libk/cxx.cc

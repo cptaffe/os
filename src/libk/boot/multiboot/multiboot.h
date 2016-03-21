@@ -1,7 +1,7 @@
 // Copyright 2016 Connor Taffe
 
-#ifndef SRC_MULTIBOOT_H_
-#define SRC_MULTIBOOT_H_
+#ifndef SRC_LIBK_BOOT_MULTIBOOT_MULTIBOOT_H_
+#define SRC_LIBK_BOOT_MULTIBOOT_MULTIBOOT_H_
 
 #include <stdint.h>
 
@@ -47,4 +47,4 @@ constexpr Multiboot::Multiboot(uint32_t f)
 
 }  // namespace basilisk
 
-#endif  // SRC_MULTIBOOT_H_
+#endif  // SRC_LIBK_BOOT_MULTIBOOT_MULTIBOOT_H_

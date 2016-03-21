@@ -1,12 +1,12 @@
 // Copyright 2016 Connor Taffe
 
-#ifndef SRC_KERNEL_H_
-#define SRC_KERNEL_H_
+#ifndef SRC_LIBK_KERNEL_H_
+#define SRC_LIBK_KERNEL_H_
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include "src/vga.h"
+#include "src/libk/drivers/video/vga/vga.h"
 
 namespace basilisk {
 
@@ -65,4 +65,4 @@ class Kernel {
 
 }  // namespace basilisk
 
-#endif  // SRC_KERNEL_H_
+#endif  // SRC_LIBK_KERNEL_H_

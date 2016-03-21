@@ -1,9 +1,9 @@
 // Copyright 2016 Connor Taffe
 
-#ifndef SRC_MAP_H_
-#define SRC_MAP_H_
+#ifndef SRC_LIBK_DS_MAP_H_
+#define SRC_LIBK_DS_MAP_H_
 
-#include "src/vec.h"
+#include "src/libk/ds/vec.h"
 
 namespace basilisk {
 
@@ -59,4 +59,4 @@ void Map<K, V>::erase(K key) {
 
 }  // namespace basilisk
 
-#endif  // SRC_MAP_H_
+#endif  // SRC_LIBK_DS_MAP_H_

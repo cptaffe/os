@@ -1,6 +1,6 @@
 // Copyright 2016 Connor Taffe
 
-#include "src/heap.h"
+#include "src/libk/mem/heap.h"
 
 namespace basilisk {
 

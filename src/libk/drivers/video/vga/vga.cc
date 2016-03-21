@@ -1,6 +1,6 @@
 // Copyright 2016 Connor Taffe
 
-#include "src/vga.h"
+#include "src/libk/drivers/video/vga/vga.h"
 
 namespace basilisk {
 

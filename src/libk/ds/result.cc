@@ -1,6 +1,6 @@
 // Copyright 2016 Connor Taffe
 
-#include "src/result.h"
+#include "src/libk/ds/result.h"
 
 namespace basilisk {
 

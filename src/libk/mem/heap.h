@@ -1,12 +1,12 @@
 // Copyright 2016 Connor Taffe
 
-#ifndef SRC_HEAP_H_
-#define SRC_HEAP_H_
+#ifndef SRC_LIBK_MEM_HEAP_H_
+#define SRC_LIBK_MEM_HEAP_H_
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include "src/result.h"
+#include "src/libk/ds/result.h"
 
 namespace basilisk {
 
@@ -146,4 +146,4 @@ void Heap::deallocate(T *memory) {
 
 }  // namespace basilisk
 
-#endif  // SRC_HEAP_H_
+#endif  // SRC_LIBK_MEM_HEAP_H_

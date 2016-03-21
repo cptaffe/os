@@ -1,7 +1,7 @@
 // Copyright 2016 Connor Taffe
 
-#ifndef SRC_RESULT_H_
-#define SRC_RESULT_H_
+#ifndef SRC_LIBK_DS_RESULT_H_
+#define SRC_LIBK_DS_RESULT_H_
 
 namespace basilisk {
 
@@ -36,4 +36,4 @@ constexpr Optional<T>::Optional() : ok{false} {}
 
 }  // namespace basilisk
 
-#endif  // SRC_RESULT_H_
+#endif  // SRC_LIBK_DS_RESULT_H_

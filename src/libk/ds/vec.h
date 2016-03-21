@@ -1,7 +1,7 @@
 // Copyright 2016 Connor Taffe
 
-#ifndef SRC_VEC_H_
-#define SRC_VEC_H_
+#ifndef SRC_LIBK_DS_VEC_H_
+#define SRC_LIBK_DS_VEC_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -107,4 +107,4 @@ T &Vec<T>::operator[](size_t i) {
 
 }  // namespace basilisk
 
-#endif  // SRC_VEC_H_
+#endif  // SRC_LIBK_DS_VEC_H_
