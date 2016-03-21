@@ -4,13 +4,9 @@
 
 namespace basilisk {
 
-uint16_t VGAScreen::Block::getBlock() const { return block; }
-
-void VGAScreen::write(Block b) {
-  buffer[i % (width * height)] = b;
-  i++;
-  column = i % width;
-  line = (i / width) % height;
+void VGAScreen::plot(Block b, size_t i, size_t j) { buffer[i * width + j] = b; }
+VGAScreen::Block VGAScreen::read(size_t i, size_t j) {
+  return buffer[i * width + j];
 }
 
 }  // namespace basilisk

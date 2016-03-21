@@ -18,25 +18,33 @@ class VGAScreen {
     kRed,
     kMagenta,
     kBrown,
-    kGrey,
-    kBright = 1 << 4
+    kLightGray,
+    kDarkGray,
+    kLightBlue,
+    kLightGreen,
+    kLightCyan,
+    kLightRed,
+    kLightMagenta,
+    kYello,
+    kWhite,
   };
 
   class Block {
    public:
     constexpr Block(char character, uint8_t foreground, uint8_t background);
-    uint16_t getBlock() const;
 
    private:
-    uint16_t block;
+    [[gnu::unused]] uint16_t block;
   };
 
-  void write(Block blocks);
+  size_t getWidth() const { return width; }
+  size_t getHeight() const { return height; }
+  void plot(Block block, size_t x, size_t y);
+  Block read(size_t x, size_t y);
 
  private:
   Block *buffer = reinterpret_cast<Block *>(static_cast<intptr_t>(0xb8000));
-  size_t height = 25, width = 80;
-  size_t column = 0, line = 0, i = 0;
+  const size_t height = 25, width = 80;
 };
 
 constexpr VGAScreen::Block::Block(char character, uint8_t foreground,

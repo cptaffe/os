@@ -10,20 +10,43 @@
 
 namespace basilisk {
 
-class Stream {
+class Terminal {
+ public:
+  virtual ~Terminal() {}
+  virtual void write(const char c) = 0;
+  virtual size_t getX() const = 0;
+  virtual void setX(const size_t x) = 0;
+  virtual size_t getY() const = 0;
+  virtual void setY(const size_t y) = 0;
+  virtual size_t getHeight() const = 0;
+  virtual size_t getWidth() const = 0;
+};
+
+class Stream : public Terminal {
  public:
   explicit constexpr Stream(VGAScreen *screen);
 
-  VGAScreen::Color getForegroundColor() const { return foreground; }
+  const VGAScreen::Color &getForegroundColor() const { return foreground; }
   void setForegroundColor(const VGAScreen::Color &color) { foreground = color; }
-  VGAScreen::Color getBackgroundColor() const { return background; }
+  const VGAScreen::Color &getBackgroundColor() const { return background; }
   void setBackgroundColor(const VGAScreen::Color &color) { background = color; }
+  void clear();
+
+  void write(const char c) override;
+  size_t getX() const override { return j; }
+  void setX(const size_t x) override { j = x; }
+  size_t getY() const override { return i; }
+  void setY(const size_t y) override { i = y; }
+  size_t getHeight() const override { return screen->getHeight(); }
+  size_t getWidth() const override { return screen->getWidth(); }
 
   friend Stream &operator<<(Stream &, const char *);
 
  private:
   VGAScreen *screen;
-  VGAScreen::Color foreground = VGAScreen::kRed, background = VGAScreen::kBlack;
+  VGAScreen::Color foreground = VGAScreen::kWhite,
+                   background = VGAScreen::kBlack;
+  size_t i = 0, j = 0;
 };
 
 constexpr Stream::Stream(VGAScreen *sc) : screen{sc} {}
@@ -41,8 +64,5 @@ class Kernel {
 };
 
 }  // namespace basilisk
-
-void *operator new(size_t size);
-void operator delete(void *mem) noexcept;
 
 #endif  // SRC_KERNEL_H_

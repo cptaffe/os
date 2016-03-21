@@ -22,8 +22,9 @@ class alignas(4) Multiboot {
  private:
   uint32_t magic = 0x1badb002;
   uint32_t flags;
-  uint32_t checksum, header_address, load_address, load_end_address,
-      bss_end_address, entry_address, mode_type, width, height, depth;
+  [[gnu::unused]] uint32_t checksum, header_address, load_address,
+      load_end_address, bss_end_address, entry_address, mode_type, width,
+      height, depth;
 };
 
 constexpr Multiboot::Multiboot(uint32_t f, uint32_t ha, uint32_t la,
