@@ -1,19 +1,35 @@
+cxx = i686-elf-g++
 cflags = -ffreestanding -fno-exceptions -fno-rtti -Wall -Wextra --std=c++1z -I.
 ldflags = -nostdlib -fpic -L${HOME}/opt/cross/lib -T src/link.ld
 
+
 rule link
-  command = i686-elf-g++ $ldflags $in -o $out
+  command = $cxx $ldflags $in -o $out
+
+rule klink
+  command = $cxx $ldflags $ctri $$($cxx $cflags -print-file-name=crtbegin.o) $libk $$($cxx $cflags -print-file-name=crtend.o) $crtn -o $out
 
 rule cc
   deps = gcc
   depfile = $out.d
-  command = i686-elf-g++ -MMD -MF $out.d $cflags -c $in -o $out
+  command = $cxx -MMD -MF $out.d $cflags -c $in -o $out
 
-build k.bin: link src/libk/boot/boot.o src/libk/mem/heap.o src/libk/kernel.o src/libk/ds/result.o src/libk/drivers/video/vga/vga.o src/libk/cxx.o
+rule static_lib
+  command = ar rcs $out $in
 
-build src/libk/boot/boot.o: cc src/libk/boot/boot.cc
-build src/libk/mem/heap.o: cc src/libk/mem/heap.cc
+build k.bin: klink src/libk/libk.a src/libk/boot/cwtop.o src/libk/boot/cwbottom.o
+  crti = src/libk/boot/cwtop.o
+  crtn = src/libk/boot/cwbottom.o
+  libk = src/libk/libk.a
+
+# libk
+build src/libk/libk.a: static_lib src/libk/kernel.o src/libk/boot/boot.o src/libk/boot/cwtop.o src/libk/boot/cwbottom.o
+libk = src/libk/kernel.o src/libk/boot/boot.o
+crti = src/libk/boot/cwtop.o
+crtn = src/libk/boot/cwbottom.o
 build src/libk/kernel.o: cc src/libk/kernel.cc
-build src/libk/ds/result.o: cc src/libk/ds/result.cc
-build src/libk/drivers/video/vga/vga.o: cc src/libk/drivers/video/vga/vga.cc
-build src/libk/cxx.o: cc src/libk/cxx.cc
+
+# boot
+build src/libk/boot/boot.o: cc src/libk/boot/boot.cc
+build src/libk/boot/cwtop.o: cc src/libk/boot/cwtop.cc
+build src/libk/boot/cwbottom.o: cc src/libk/boot/cwbottom.cc

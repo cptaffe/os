@@ -2,119 +2,128 @@
 
 #include "src/libk/kernel.h"
 
-#include "src/libk/cxx.h"
-#include "src/libk/mem/heap.h"
-
 namespace {
 const char *version =
     "Basilisk Kernel version 0.1.\nCopyright (c) 2016 Connor Taffe. All "
     "rights reserved.\n";
+}  // namespace
+
+namespace {
+
+class Terminal {
+ public:
+  Terminal(uint16_t *buf, size_t h, size_t w)
+      : buffer(buf), height(h), width(w) {}
+  void println(const char *str);
+
+ private:
+  size_t buffer_index = 0;
+  uint16_t *buffer;
+  size_t height, width;
+
+  void newline();
+  void advance();
+};
+
+void Terminal::newline() {
+  buffer_index = (buffer_index + width) / width * width;
 }
+
+void Terminal::advance() { buffer_index++; }
+
+void Terminal::println(const char *str) {
+  for (size_t i = 0; str[i]; i++) {
+    if (str[i] == '\n') {
+      newline();
+    } else {
+      buffer[buffer_index] = str[i] | 9 << 8;
+      advance();
+    }
+  }
+  newline();
+}
+
+Terminal term{reinterpret_cast<uint16_t *>(static_cast<intptr_t>(0xb8000)), 25,
+              80};
+
+class Heap {
+ public:
+  Heap() { *reinterpret_cast<Header *>(buffer) = Header{sizeof(buffer)}; }
+  void *alloc(size_t s) {
+    term.println("allocating");
+    if (free_list[0] != nullptr) {
+      // still have free entries
+      if (free_list[0]->size() > s) {
+        Header *h = free_list[0];
+        // TODO(cptaffe): try to split
+        free_list[0] = nullptr;
+        return h->toAddress();
+      }
+      return nullptr;
+    }
+  }
+
+  void dealloc(void *p) {
+    for (int i = 0; i < sizeof(free_list) / sizeof(Header *); i++) {
+      if (free_list[i] == nullptr) {
+        free_list[i] = Header::fromAddress(p);
+      }
+    }
+  }
+
+  class Header {
+   public:
+    explicit Header(size_t s) : size_{s} {}
+    size_t size() const { return size_; }
+    void *toAddress() {
+      return &(reinterpret_cast<uint8_t *>(this)[sizeof(Header)]);
+    }
+    static Header *fromAddress(void *p) {
+      return reinterpret_cast<Header *>(
+          &(static_cast<uint8_t *>(p)[-sizeof(Header)]));
+    }
+
+   private:
+    size_t size_;
+  };
+
+ private:
+  uint8_t buffer[4096];
+  Header *free_list[10];
+};
+
+Heap heap;
+
+}  // namespace
+
+void *operator new(size_t s) { return heap.alloc(s); }
+
+void operator delete(void *p) { heap.dealloc(p); }
 
 namespace basilisk {
 
-namespace {
-VGAScreen screen;
-Stream stream{&screen};
-Kernel kernel;
+Kernel *Kernel::instance_ = nullptr;
+
+Kernel::Kernel() { term.println("kernel constructor running"); }
+
+Kernel *Kernel::instance() {
+  if (instance_ == nullptr) {
+    instance_ = new Kernel{};
+  }
+  return instance_;
 }
 
-Kernel *Kernel::instance{&kernel};
-Stream *Kernel::debug_stream{&stream};
-
-Kernel *Kernel::getInstance() { return instance; }
-
 void Kernel::onBoot() {
-  getDebugStream().clear();
-  getDebugStream() << version;
-
-  // allocate stack space for heap, page aligned
-  static const size_t kPageSize = 4096;
-  alignas(kPageSize) uint8_t heap_buffer[kPageSize];
-  auto hp = Heap{heap_buffer, sizeof(heap_buffer)};
-  heap = &hp;
-
+  term.println("onBoot: here");
+  term.println(version);
   halt();
 }
 
 void Kernel::halt() {
+  term.println("halting...");
   // turn off interrrupts and halt
   asm("cli\n"
-      "hlt\n");
-
-  for (;;) {
-    // loop forever
-  }
-}
-
-Stream &Kernel::getDebugStream() { return *debug_stream; }
-
-void Stream::clear() {
-  VGAScreen::Block b{' ', foreground, background};
-  for (i = 0; i < screen->getHeight(); i++) {
-    for (j = 0; j < screen->getWidth(); j++) {
-      screen->plot(b, i, j);
-    }
-  }
-  i = j = 0;
-}
-
-class Printer {
- public:
-  Printer(Terminal *screen, size_t tab_width);
-  void print(const char *str);
-
- private:
-  size_t tab_width;
-  Terminal *screen;
-};
-
-Printer::Printer(Terminal *s, size_t tw) : tab_width(tw), screen(s) {}
-
-void Printer::print(const char *str) {
-  for (size_t i = 0; str[i]; i++) {
-    switch (str[i]) {
-      case '\t':
-        // tab length of 4 spaces
-        {
-          auto n = tab_width - screen->getX() % tab_width;
-          for (size_t j = 0; j < n; j++) {
-            screen->write(' ');
-          }
-        }
-        break;
-      case '\n':
-        screen->setY(screen->getY() + 1 % screen->getHeight());
-        [[fallthrough]];
-      case '\r':
-        screen->setX(0);
-        break;
-      default:
-        screen->write(str[i]);
-    }
-  }
-}
-
-void Stream::write(const char c) {
-  screen->plot(VGAScreen::Block{c, foreground, background}, i, j);
-  j++;
-  if (j > screen->getWidth()) {
-    j = 0;
-    i++;
-    if (i > screen->getHeight()) {
-      for (size_t k = 1; k < screen->getHeight(); k++) {
-        for (size_t l = 0; l < screen->getWidth(); l++) {
-          screen->plot(screen->read(k, l), k - 1, l);
-        }
-      }
-      i--;
-    }
-  }
-}
-
-Stream &operator<<(Stream &s, const char *msg) {
-  Printer(&s, 4).print(msg);
-  return s;
+      "hlt\n");  // never returns
 }
 
 }  // namespace basilisk
