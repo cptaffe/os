@@ -12,7 +12,6 @@ class Kernel {
  public:
   static Kernel *instance();
   [[noreturn]] void onBoot();
-  [[noreturn]] void halt();
 
  private:
   Kernel();

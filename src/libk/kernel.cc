@@ -8,25 +8,54 @@ const char *version =
     "rights reserved.\n";
 }  // namespace
 
-namespace __gnu_pbds {
-namespace detail {}  // namespace detail
-}  // namespace __gnu_pbds
-
 namespace std {
 
 template <typename T>
 class initializer_list {
  public:
+  constexpr initializer_list(const T *b, size_t s) : data_{b}, size_{s} {}
+  constexpr size_t size() { return size_; }
+  constexpr T operator[](size_t i) { return data_[i]; }
+
+  class Iter {
+   public:
+    constexpr Iter(initializer_list *a, size_t i) : list_{a}, index{i} {}
+    void operator++() {
+      if (index < list_->size()) {
+        index++;
+      }
+    }
+    T *operator*() const { return &(*list_)[index]; }
+    bool operator!=(const Iter &other) const {
+      return other.list_ != list_ || other.index != index;
+    }
+
+   private:
+    initializer_list *list_;
+    size_t index;
+  };
+
+  constexpr Iter begin() { return Iter{this, 0}; }
+  constexpr Iter end() { return Iter{this, size() - 1}; }
+
+ private:
+  const T *data_;
+  size_t size_;
 };
 
 template <typename T, size_t S>
 class array {
  public:
-  explicit array(std::intializer_list<T> b) : buffer{b} {}
+  array() : data_{} {}
+  explicit array(initializer_list<T> list) {
+    for (size_t i = 0; i < list.size(); i++) {
+      data_[i] = list[i];
+    }
+  }
   constexpr size_t size() const { return S; }
   constexpr bool empty() const { return size() == 0; }
-  constexpr T &operator[](size_t i) { return buffer[i]; }
-  constexpr T *data() { return buffer; }
+  constexpr T &operator[](size_t i) { return data_[i]; }
+  constexpr T *data() { return data_; }
   void fill(const T &v) {
     for (auto &e : *this) {
       e = v;
@@ -42,19 +71,19 @@ class array {
 
   class Iter {
    public:
-    constexpr Iter(array *a, size_t i) : array{a}, index{i} {}
+    constexpr Iter(array *a, size_t i) : array_{a}, index{i} {}
     void operator++() {
-      if (index < array->size() - 1) {
+      if (index < array_->size()) {
         index++;
       }
     }
-    T *operator*() const { return &array[index]; }
+    T *operator*() const { return &(*array_)[index]; }
     bool operator!=(const Iter &other) const {
-      return other.array != array || other.index != index;
+      return other.array_ != array_ || other.index != index;
     }
 
    private:
-    array<T, S> *array;
+    array<T, S> *array_;
     size_t index;
   };
 
@@ -62,17 +91,25 @@ class array {
   constexpr Iter end() { return Iter{this, size() - 1}; }
 
  private:
-  T buffer[S];
+  T data_[S];
 };
+
 }  // namespace std
 
 namespace {
+
+// halts and never returns
+[[noreturn]] void halt() {
+  asm("cli\n"
+      "hlt\n");
+}
 
 class Terminal {
  public:
   Terminal(uint16_t *buf, size_t h, size_t w)
       : buffer(buf), height(h), width(w) {}
   void println(const char *str);
+  [[noreturn]] void fatal(const char *str);
 
  private:
   size_t buffer_index = 0;
@@ -101,21 +138,18 @@ void Terminal::println(const char *str) {
   newline();
 }
 
+void Terminal::fatal(const char *str) {
+  println(str);
+  halt();
+}
+
 // NOTE: term is used in Heap, so it must not allocate with 'new'
 Terminal term{reinterpret_cast<uint16_t *>(static_cast<intptr_t>(0xb8000)), 25,
               80};
 
-// halts and never returns
-[[noreturn]] void halt() {
-  asm("cli\n"
-      "hlt\n");
-}
-
 class Heap {
  public:
-  Heap() {
-    *reinterpret_cast<Header *>(buffer.data()) = Header{sizeof(buffer)};
-  }
+  Heap() { *reinterpret_cast<Header *>(data_.data()) = Header{sizeof(data_)}; }
   void *alloc(size_t s) {
     term.println("allocating");
     if (free_list[0] != nullptr) {
@@ -158,9 +192,9 @@ class Heap {
   };
 
  private:
-  std::array<uint8_t, 4096> buffer;
-  std::array<Header *, 10> free_list = {
-      {reinterpret_cast<Header *>(buffer.data())}};
+  std::array<uint8_t, 4096> data_;
+  std::array<Header *, 10> free_list =
+      std::array<Header *, 10>{reinterpret_cast<Header *>(data_.data())};
 };
 
 Heap heap;
@@ -187,13 +221,7 @@ Kernel *Kernel::instance() {
 void Kernel::onBoot() {
   term.println("onBoot: here");
   term.println(version);
-  halt();
-}
-
-void Kernel::halt() {
-  term.println("halting...");
-  // turn off interrrupts and halt
-  ::halt();
+  term.fatal("halting...");
 }
 
 }  // namespace basilisk
