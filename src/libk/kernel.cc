@@ -8,6 +8,64 @@ const char *version =
     "rights reserved.\n";
 }  // namespace
 
+namespace __gnu_pbds {
+namespace detail {}  // namespace detail
+}  // namespace __gnu_pbds
+
+namespace std {
+
+template <typename T>
+class initializer_list {
+ public:
+};
+
+template <typename T, size_t S>
+class array {
+ public:
+  explicit array(std::intializer_list<T> b) : buffer{b} {}
+  constexpr size_t size() const { return S; }
+  constexpr bool empty() const { return size() == 0; }
+  constexpr T &operator[](size_t i) { return buffer[i]; }
+  constexpr T *data() { return buffer; }
+  void fill(const T &v) {
+    for (auto &e : *this) {
+      e = v;
+    }
+  }
+  void swap(array<T, S> &other) {
+    for (size_t i = 0; i < size(); i++) {
+      T t = (*this)[i];
+      (*this)[i] = other[i];
+      other[i] = t;
+    }
+  }
+
+  class Iter {
+   public:
+    constexpr Iter(array *a, size_t i) : array{a}, index{i} {}
+    void operator++() {
+      if (index < array->size() - 1) {
+        index++;
+      }
+    }
+    T *operator*() const { return &array[index]; }
+    bool operator!=(const Iter &other) const {
+      return other.array != array || other.index != index;
+    }
+
+   private:
+    array<T, S> *array;
+    size_t index;
+  };
+
+  constexpr Iter begin() { return Iter{this, 0}; }
+  constexpr Iter end() { return Iter{this, size() - 1}; }
+
+ private:
+  T buffer[S];
+};
+}  // namespace std
+
 namespace {
 
 class Terminal {
@@ -36,19 +94,28 @@ void Terminal::println(const char *str) {
     if (str[i] == '\n') {
       newline();
     } else {
-      buffer[buffer_index] = str[i] | 9 << 8;
+      buffer[buffer_index] = static_cast<uint16_t>(str[i] | 9 << 8);
       advance();
     }
   }
   newline();
 }
 
+// NOTE: term is used in Heap, so it must not allocate with 'new'
 Terminal term{reinterpret_cast<uint16_t *>(static_cast<intptr_t>(0xb8000)), 25,
               80};
 
+// halts and never returns
+[[noreturn]] void halt() {
+  asm("cli\n"
+      "hlt\n");
+}
+
 class Heap {
  public:
-  Heap() { *reinterpret_cast<Header *>(buffer) = Header{sizeof(buffer)}; }
+  Heap() {
+    *reinterpret_cast<Header *>(buffer.data()) = Header{sizeof(buffer)};
+  }
   void *alloc(size_t s) {
     term.println("allocating");
     if (free_list[0] != nullptr) {
@@ -59,12 +126,15 @@ class Heap {
         free_list[0] = nullptr;
         return h->toAddress();
       }
-      return nullptr;
     }
+    // impossible to allocate more memory
+    // TODO(cptaffe): implement exceptions, catch in onBoot()
+    term.println("fatal: out of memory");
+    halt();
   }
 
   void dealloc(void *p) {
-    for (int i = 0; i < sizeof(free_list) / sizeof(Header *); i++) {
+    for (size_t i = 0; i < sizeof(free_list) / sizeof(Header *); i++) {
       if (free_list[i] == nullptr) {
         free_list[i] = Header::fromAddress(p);
       }
@@ -88,8 +158,9 @@ class Heap {
   };
 
  private:
-  uint8_t buffer[4096];
-  Header *free_list[10];
+  std::array<uint8_t, 4096> buffer;
+  std::array<Header *, 10> free_list = {
+      {reinterpret_cast<Header *>(buffer.data())}};
 };
 
 Heap heap;
@@ -98,7 +169,7 @@ Heap heap;
 
 void *operator new(size_t s) { return heap.alloc(s); }
 
-void operator delete(void *p) { heap.dealloc(p); }
+void operator delete(void *p) noexcept { heap.dealloc(p); }
 
 namespace basilisk {
 
@@ -122,8 +193,7 @@ void Kernel::onBoot() {
 void Kernel::halt() {
   term.println("halting...");
   // turn off interrrupts and halt
-  asm("cli\n"
-      "hlt\n");  // never returns
+  ::halt();
 }
 
 }  // namespace basilisk
