@@ -36,7 +36,6 @@ SECTIONS
 	{
 		*(COMMON)
 		*(.bss)
-    *(.bootstrap_heap)
 		*(.bootstrap_stack)
 	}
 

@@ -1,5 +1,6 @@
-cxx = i686-elf-g++
-cflags = -ffreestanding -fno-exceptions -fno-rtti -Wall -Wextra --std=c++1z -I.
+cxx = clang++ --target=i686-pc-none-elf
+gnucxx = i686-elf-gcc
+cflags = -ffreestanding -fno-exceptions -fno-rtti -mno-mmx -mno-sse -mno-sse2 -Wall -Wextra --std=c++1z -I.
 ldflags = -nostdlib -fpic -L${HOME}/opt/cross/lib -T src/link.ld
 
 
@@ -7,7 +8,7 @@ rule link
   command = $cxx $ldflags $in -o $out
 
 rule klink
-  command = $cxx $ldflags $ctri $$($cxx $cflags -print-file-name=crtbegin.o) $libk $$($cxx $cflags -print-file-name=crtend.o) $crtn -o $out
+  command = $cxx $ldflags $ctri $$($gnucxx $ldflags --print-file-name=crtbegin.o) $libk $$($gnucxx $ldflags --print-file-name=crtend.o) $crtn -o $out
 
 rule cc
   deps = gcc

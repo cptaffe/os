@@ -12,19 +12,21 @@ extern void constructors();
 extern void deconstructors();
 }
 
+// Bootstrap stack used before we map a real stack
+[[gnu::section(".bootstrap_stack")]] uint8_t bootstrap::stack[kStackSize];
+
 namespace {
 // Multiboot header required for some bootloaders
 [[gnu::unused]][[gnu::section(".multiboot")]] basilisk::Multiboot header{
     basilisk::Multiboot::kPageAlign | basilisk::Multiboot::kMemInfo};
-// Bootstrap stack used before we map a real stack
-[[gnu::section(".bootstrap_stack")]] uint8_t stack[16384];
 }  // namespace
 
 // HACK: naked functions are unsupported by g++ on x86,
 // but this function incidentally still works.
 [[gnu::naked]] void _start() {
-  asm("movl %0, %%esp\n"
-      "calll *%1\n" ::"g"(reinterpret_cast<intptr_t>(stack) + sizeof(stack)),
+  asm("mov %0, %%esp\n"
+      "call *%1\n" ::"g"(reinterpret_cast<intptr_t>(bootstrap::stack) +
+                         sizeof(bootstrap::stack)),
       "g"(static_cast<void (*)()>([]() {
         constructors();
         basilisk::Kernel::instance()->onBoot();
